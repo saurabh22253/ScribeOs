@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+env/
+.env
+
+# Compiled Swift binary (built locally — not source)
+audio_bridge
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+scribeos_*.log
+
+# Temp audio files created by the AI processor
+/tmp/scribeos_*.wav
