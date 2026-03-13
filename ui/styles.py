@@ -1,54 +1,62 @@
 """
-ui/styles.py — ScribeOS Design System
-======================================
-Premium dark-theme design tokens.  Every colour, size, and type choice that
-appears in the UI lives here — tweak once, change everything.
+ui/styles.py — ScribeOS Design System (v2)
+==========================================
+Premium dark-theme design tokens — Linear / Notion / Otter.ai aesthetic.
+Tweak once, change everything.
 """
 
-import flet as ft
-
 # ── Core palette ───────────────────────────────────────────────────────────────
-# Layer depths (darkest → lightest)
-BG_PAGE       = "#07070f"   # deepest canvas
-BG_SURFACE    = "#0d0d1c"   # navbar / dock
-BG_CARD       = "#111124"   # elevated cards
-BG_INPUT      = "#0a0a18"   # text fields
+# GitHub Dark-inspired depth layers
+BG_PAGE       = "#0E1117"   # deepest canvas
+BG_SURFACE    = "#161B22"   # sidebar, panels
+BG_CARD       = "#1C2128"   # elevated cards, inputs
+BG_INPUT      = "#1C2128"   # text fields
 
 # Borders
-BORDER_SUBTLE  = "#1a1a32"
-BORDER_DEFAULT = "#252545"
+BORDER_SUBTLE  = "#30363D"
+BORDER_DEFAULT = "#3D444D"
 
-# Accent — indigo family
+# Accent — Indigo / Amethyst
 ACCENT_BRIGHT = "#818cf8"   # highlights, icons
-ACCENT_MED    = "#6366f1"   # interactive elements
+ACCENT_MED    = "#6366F1"   # interactive elements
 ACCENT_DARK   = "#4f46e5"   # button fills
 
-# Record states — idle=indigo, active=rose
-RECORD_IDLE_BG    = "#4f46e5"
+# Sidebar nav
+NAV_WIDTH         = 220
+NAV_ACTIVE_BG     = "#21262D"
+NAV_HOVER_BG      = "#1C2128"
+NAV_ICON_ACTIVE   = "#8B5CF6"
+NAV_ICON_INACTIVE = "#6E7681"
+
+# Record states
+RECORD_IDLE_BG    = "#6366F1"
 RECORD_ACTIVE_BG  = "#be123c"
 RECORD_ACTIVE_GLOW= "#f43f5e"
 
 # Mic states
-MIC_ACTIVE    = "#0e7490"   # cyan-700
-MIC_MUTED     = "#c2410c"   # orange-700
+MIC_ACTIVE    = "#0e7490"
+MIC_MUTED     = "#c2410c"
+
+# Processing state
+PROCESSING_COLOR = "#6366F1"
 
 # Minutes of meeting — violet
 MOM_COLOR  = "#a78bfa"
-MOM_BORDER = "#2e1065"
+MOM_BORDER = "#2d2255"
 
 # Text
-TEXT_PRIMARY   = "#f1f5f9"
-TEXT_SECONDARY = "#94a3b8"
-TEXT_MUTED     = "#475569"
+TEXT_PRIMARY   = "#E6EDF3"
+TEXT_SECONDARY = "#8B949E"
+TEXT_MUTED     = "#6E7681"
 
 # Status
-STATUS_OK      = "#34d399"
-STATUS_WARN    = "#fbbf24"
-STATUS_ERROR   = "#f87171"
-STATUS_INFO    = "#818cf8"
-STATUS_DEFAULT = "#64748b"
+STATUS_OK      = "#3fb950"
+STATUS_WARN    = "#d29922"
+STATUS_ERROR   = "#f85149"
+STATUS_INFO    = "#58a6ff"
+STATUS_DEFAULT = "#6E7681"
 
-# ── Backward-compatible aliases (imported by main.py) ─────────────────────────
+# ── Backward-compatible aliases ────────────────────────────────────────────────
 COLOR_ACCENT          = ACCENT_BRIGHT
 COLOR_RECORD_ACTIVE   = RECORD_ACTIVE_BG
 COLOR_RECORD_IDLE     = RECORD_IDLE_BG
@@ -66,18 +74,18 @@ COLOR_TRANSCRIPT_TEXT   = TEXT_PRIMARY
 COLOR_SURFACE           = BG_SURFACE
 
 # ── Dimensions ─────────────────────────────────────────────────────────────────
-WINDOW_WIDTH    = 1020
-WINDOW_HEIGHT   = 760
-PADDING         = 0          # zero — sections manage their own padding
+WINDOW_WIDTH    = 1100
+WINDOW_HEIGHT   = 780
+PADDING         = 0
 
-BORDER_RADIUS      = 12
-BORDER_RADIUS_SM   = 8
-BORDER_RADIUS_LG   = 18
+BORDER_RADIUS      = 10
+BORDER_RADIUS_SM   = 6
+BORDER_RADIUS_LG   = 12
 BORDER_RADIUS_PILL = 100
 
 # ── Typography ─────────────────────────────────────────────────────────────────
-FONT_DISPLAY  = 32
-FONT_TITLE    = 18
+FONT_DISPLAY  = 28
+FONT_TITLE    = 16
 FONT_SECTION  = 11
 FONT_BODY     = 13
 FONT_STATUS   = 12

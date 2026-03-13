@@ -31,3 +31,10 @@ scribeos_*.log
 
 # Temp audio files created by the AI processor
 /tmp/scribeos_*.wav
+
+# User data — transcripts and exported MOMs (sensitive meeting content)
+data/
+moms/
+
+# macOS app bundle (build artifact)
+ScribeOS.app/

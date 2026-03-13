@@ -13,3 +13,7 @@ keyring>=24.3.0
 
 # Optional: load a .env file for the API key during development
 python-dotenv>=1.0.1
+
+# PDF export — Markdown → styled PDF
+markdown>=3.5.0        # parse Markdown (tables, fenced_code extensions)
+reportlab>=4.0.0       # pure-Python PDF generation — no system libs needed
