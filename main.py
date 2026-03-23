@@ -132,11 +132,6 @@ class ScribeOSApp:
         self._timer_row         : Optional[ft.Row]          = None
         self._timer_text        : Optional[ft.Text]         = None
         self._processing_overlay: Optional[ft.Container]    = None
-        self._step1_card        : Optional[ft.Container]    = None
-        self._step2_card        : Optional[ft.Container]    = None
-        self._step1_ring        : Optional[ft.ProgressRing] = None
-        self._step1_label       : Optional[ft.Text]         = None
-        self._step2_label       : Optional[ft.Text]         = None
         self._transcript_pane   : Optional[ft.Container]    = None
         self._transcript_list   : Optional[ft.ListView]     = None
         self._transcript_empty  : Optional[ft.Container]    = None
@@ -205,7 +200,7 @@ class ScribeOSApp:
                     content=ft.Icon(ft.Icons.GRAPHIC_EQ_ROUNDED, size=16, color=ACCENT_BRIGHT),
                     bgcolor=ft.Colors.with_opacity(0.12, ft.Colors.WHITE),
                     border_radius=BORDER_RADIUS_SM,
-                    padding=ft.Padding.all(7),
+                    padding=ft.padding.all(7),
                 ),
                 ft.Column(
                     controls=[
@@ -305,8 +300,8 @@ class ScribeOSApp:
             ),
             width=NAV_WIDTH,
             bgcolor=BG_SURFACE,
-            border=ft.Border.only(right=ft.BorderSide(1, BORDER_SUBTLE)),
-            padding=ft.Padding.all(16),
+            border=ft.border.only(right=ft.BorderSide(1, BORDER_SUBTLE)),
+            padding=ft.padding.all(16),
         )
 
     def _make_nav_item(self, icon, label, active=False, on_click=None) -> ft.Container:
@@ -326,7 +321,7 @@ class ScribeOSApp:
             ),
             bgcolor=bg,
             border_radius=BORDER_RADIUS_SM,
-            padding=ft.Padding.symmetric(horizontal=10, vertical=8),
+            padding=ft.padding.symmetric(horizontal=10, vertical=8),
             on_click=on_click,
             ink=True,
         )
@@ -388,9 +383,9 @@ class ScribeOSApp:
                 tight=True,
             ),
             bgcolor=BG_CARD,
-            border=ft.Border.all(1, BORDER_SUBTLE),
+            border=ft.border.all(1, BORDER_SUBTLE),
             border_radius=BORDER_RADIUS_LG,
-            padding=ft.Padding.all(16),
+            padding=ft.padding.all(16),
             shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.with_opacity(0.2, ft.Colors.BLACK), offset=ft.Offset(0, 2)),
         )
 
@@ -407,7 +402,7 @@ class ScribeOSApp:
             ),
             bgcolor=RECORD_IDLE_BG,
             border_radius=BORDER_RADIUS_PILL,
-            padding=ft.Padding.symmetric(horizontal=28, vertical=14),
+            padding=ft.padding.symmetric(horizontal=28, vertical=14),
             on_click=self._toggle_recording,
             ink=True,
             shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.4, RECORD_IDLE_BG), offset=ft.Offset(0, 4)),
@@ -422,7 +417,7 @@ class ScribeOSApp:
             ),
             bgcolor=MIC_ACTIVE,
             border_radius=BORDER_RADIUS_PILL,
-            padding=ft.Padding.symmetric(horizontal=18, vertical=12),
+            padding=ft.padding.symmetric(horizontal=18, vertical=12),
             on_click=self._toggle_mic,
             ink=True,
             visible=False,
@@ -435,10 +430,13 @@ class ScribeOSApp:
             border_radius=5,
         )
         self._timer_row = ft.Row(
-            controls=[rec_dot, self._timer_text],
-            spacing=8,
-            visible=False,
+            controls=[
+                ft.Icon(ft.Icons.SCHEDULE, size=14, color=TEXT_MUTED),
+                self._timer_text,
+                ft.Container(expand=True),
+            ],
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=14,
         )
 
         controls_row = ft.Row(
@@ -453,59 +451,7 @@ class ScribeOSApp:
             spacing=14,
         )
 
-        # ── Processing overlay — two live step cards ─────────────────────────
-        self._step1_ring  = ft.ProgressRing(width=14, height=14, stroke_width=2, color=PROCESSING_COLOR)
-        self._step1_label = ft.Text("In progress…", size=9, color=PROCESSING_COLOR)
-        self._step2_label = ft.Text("Waiting…",     size=9, color=TEXT_MUTED)
-
-        self._step1_card = ft.Container(
-            content=ft.Column(
-                controls=[
-                    ft.Row(
-                        controls=[
-                            self._step1_ring,
-                            ft.Text("Step 1 — Acoustic", size=11, weight=ft.FontWeight.W_600, color=TEXT_PRIMARY),
-                        ],
-                        spacing=6,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
-                    ft.Text("Transcribing audio to generic labels", size=9, color=TEXT_SECONDARY),
-                    self._step1_label,
-                ],
-                spacing=4,
-                tight=True,
-            ),
-            bgcolor=ft.Colors.with_opacity(0.08, PROCESSING_COLOR),
-            border=ft.Border.all(1, PROCESSING_COLOR),
-            border_radius=BORDER_RADIUS,
-            padding=ft.Padding.all(10),
-            expand=True,
-        )
-
-        self._step2_card = ft.Container(
-            content=ft.Column(
-                controls=[
-                    ft.Row(
-                        controls=[
-                            ft.Icon(ft.Icons.MANAGE_SEARCH_ROUNDED, size=14, color=TEXT_MUTED),
-                            ft.Text("Step 2 — Speaker ID", size=11, weight=ft.FontWeight.W_600, color=TEXT_MUTED),
-                        ],
-                        spacing=6,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
-                    ft.Text("Resolving real names from context", size=9, color=TEXT_MUTED),
-                    self._step2_label,
-                ],
-                spacing=4,
-                tight=True,
-            ),
-            bgcolor=ft.Colors.with_opacity(0.03, ft.Colors.WHITE),
-            border=ft.Border.all(1, BORDER_SUBTLE),
-            border_radius=BORDER_RADIUS,
-            padding=ft.Padding.all(10),
-            expand=True,
-        )
-
+        # ── Processing overlay ─────────────────────────
         self._processing_overlay = ft.Container(
             content=ft.Column(
                 controls=[
@@ -517,21 +463,17 @@ class ScribeOSApp:
                         color=TEXT_PRIMARY,
                     ),
                     ft.Text(
-                        "This usually takes 30–90 seconds. Please wait.",
+                        "Transcribing audio and identifying speakers...",
                         size=11,
                         color=TEXT_MUTED,
                         text_align=ft.TextAlign.CENTER,
-                    ),
-                    ft.Row(
-                        controls=[self._step1_card, self._step2_card],
-                        spacing=12,
                     ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=16,
             ),
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.alignment.center,
             expand=True,
             visible=False,
             bgcolor=BG_PAGE,
@@ -539,7 +481,7 @@ class ScribeOSApp:
 
         # ── Transcript area ───────────────────────────────────────────────────
         self._transcript_empty  = studio_empty_state()
-        self._transcript_list   = ft.ListView(spacing=6, auto_scroll=True, padding=ft.Padding.all(2))
+        self._transcript_list   = ft.ListView(spacing=6, auto_scroll=True, padding=ft.padding.all(2))
 
         transcript_stack = ft.Stack(
             controls=[
@@ -569,9 +511,9 @@ class ScribeOSApp:
                 expand=True,
             ),
             bgcolor=BG_CARD,
-            border=ft.Border.all(1, BORDER_SUBTLE),
+            border=ft.border.all(1, BORDER_SUBTLE),
             border_radius=BORDER_RADIUS_LG,
-            padding=ft.Padding.all(20),
+            padding=ft.padding.all(20),
             expand=True,
             shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.BLACK), offset=ft.Offset(0, 4)),
         )
@@ -605,9 +547,9 @@ class ScribeOSApp:
                 expand=True,
             ),
             bgcolor=BG_CARD,
-            border=ft.Border.all(1, MOM_BORDER),
+            border=ft.border.all(1, MOM_BORDER),
             border_radius=BORDER_RADIUS_LG,
-            padding=ft.Padding.all(20),
+            padding=ft.padding.all(20),
             visible=False,
             height=260,
             shadow=ft.BoxShadow(blur_radius=16, color=ft.Colors.with_opacity(0.25, ft.Colors.BLACK), offset=ft.Offset(0, 3)),
@@ -622,7 +564,7 @@ class ScribeOSApp:
                 ),
                 bgcolor=color,
                 border_radius=BORDER_RADIUS_PILL,
-                padding=ft.Padding.symmetric(horizontal=14, vertical=9),
+                padding=ft.padding.symmetric(horizontal=14, vertical=9),
                 on_click=onclick,
                 ink=True,
             )
@@ -651,14 +593,14 @@ class ScribeOSApp:
                 spacing=6,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            padding=ft.Padding.symmetric(horizontal=0, vertical=4),
+            padding=ft.padding.symmetric(horizontal=0, vertical=4),
         )
 
         self._studio_view = ft.Column(
             controls=[
                 ft.Container(
                     content=ft.Text("New Session", size=22, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
-                    padding=ft.Padding.only(bottom=4),
+                    padding=ft.padding.only(bottom=4),
                 ),
                 glossary_card,
                 controls_row,
@@ -674,7 +616,7 @@ class ScribeOSApp:
         return ft.Container(
             content=self._studio_view,
             expand=True,
-            padding=ft.Padding.all(24),
+            padding=ft.padding.all(24),
         )
 
     # ── History Tab ───────────────────────────────────────────────────────────
@@ -698,7 +640,7 @@ class ScribeOSApp:
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=10,
             ),
-            alignment=ft.Alignment.CENTER,
+            alignment=ft.alignment.center,
             expand=True,
         )
 
@@ -710,7 +652,7 @@ class ScribeOSApp:
                 ),
                 bgcolor=color,
                 border_radius=BORDER_RADIUS_PILL,
-                padding=ft.Padding.symmetric(horizontal=14, vertical=9),
+                padding=ft.padding.symmetric(horizontal=14, vertical=9),
                 on_click=onclick,
                 ink=True,
             )
@@ -746,9 +688,9 @@ class ScribeOSApp:
                 expand=True,
             ),
             bgcolor=BG_CARD,
-            border=ft.Border.all(1, BORDER_SUBTLE),
+            border=ft.border.all(1, BORDER_SUBTLE),
             border_radius=BORDER_RADIUS_LG,
-            padding=ft.Padding.all(20),
+            padding=ft.padding.all(20),
             expand=True,
             shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.BLACK), offset=ft.Offset(0, 4)),
         )
@@ -779,9 +721,9 @@ class ScribeOSApp:
                 expand=True,
             ),
             bgcolor=BG_CARD,
-            border=ft.Border.all(1, BORDER_SUBTLE),
+            border=ft.border.all(1, BORDER_SUBTLE),
             border_radius=BORDER_RADIUS_LG,
-            padding=ft.Padding.all(16),
+            padding=ft.padding.all(16),
             width=280,
             shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.BLACK), offset=ft.Offset(0, 4)),
         )
@@ -800,7 +742,7 @@ class ScribeOSApp:
                 controls=[
                     ft.Container(
                         content=ft.Text("History", size=22, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
-                        padding=ft.Padding.only(bottom=4),
+                        padding=ft.padding.only(bottom=4),
                     ),
                     self._history_view,
                 ],
@@ -808,7 +750,7 @@ class ScribeOSApp:
                 expand=True,
             ),
             expand=True,
-            padding=ft.Padding.all(24),
+            padding=ft.padding.all(24),
         )
 
     # ── History logic ─────────────────────────────────────────────────────────
@@ -1060,11 +1002,10 @@ class ScribeOSApp:
 
         def _transcribe() -> None:
             if full_wav and self._ai_processor:
-                self._set_status("Step 1: acoustic transcription…", COLOR_STATUS_INFO)
+                self._set_status("Transcribing and identifying speakers…", COLOR_STATUS_INFO)
                 self._ai_processor.transcribe_chunk(
                     full_wav,
                     self._on_transcript_ready,
-                    on_step=self._update_pipeline_step,
                 )
             else:
                 self._on_transcript_ready("[No audio captured]")
@@ -1072,8 +1013,9 @@ class ScribeOSApp:
         threading.Thread(target=_transcribe, daemon=True).start()
         log.info("Recording stopped — processing in progress")
 
-    def _on_transcript_ready(self, text: str) -> None:
-        self._append_transcript(text)
+    def _on_transcript_ready(self, final_text: str) -> None:
+        """Called from background thread when processing is done."""
+        self._append_transcript(final_text)
 
         # Auto-save transcript
         if self._ai_processor:
@@ -1091,26 +1033,9 @@ class ScribeOSApp:
             self._page.update()
         log.info("Transcription complete")
 
-    def _update_pipeline_step(self, step: int) -> None:
-        """Called from background thread when pipeline transitions to step 2."""
-        if step == 2 and self._step1_card and self._step2_card:
-            # Mark step 1 complete
-            self._step1_ring.visible     = False
-            self._step1_label.value      = "Complete ✓"
-            self._step1_label.color      = COLOR_STATUS_OK
-            self._step1_card.bgcolor     = ft.Colors.with_opacity(0.06, COLOR_STATUS_OK)
-            self._step1_card.border      = ft.Border.all(1, COLOR_STATUS_OK)
-            # Activate step 2
-            self._step2_label.value      = "In progress…"
-            self._step2_label.color      = PROCESSING_COLOR
-            self._step2_card.bgcolor     = ft.Colors.with_opacity(0.08, PROCESSING_COLOR)
-            self._step2_card.border      = ft.Border.all(1, PROCESSING_COLOR)
-            step2_row: ft.Row  = self._step2_card.content.controls[0]
-            step2_icon: ft.Icon = step2_row.controls[0]
-            step2_icon.color  = PROCESSING_COLOR
-            self._set_status("Step 2: speaker identification…", COLOR_STATUS_INFO)
-        if self._page:
-            self._page.update()
+    def _update_ui_timer(self) -> None:
+        """Called every second by the timer thread."""
+        pass
 
     # ── Mic toggle ────────────────────────────────────────────────────────────
 
@@ -1171,10 +1096,10 @@ class ScribeOSApp:
                     selectable=True,
                     extension_set=ft.MarkdownExtensionSet.GITHUB_WEB,
                 ),
-                padding=ft.Padding.symmetric(horizontal=14, vertical=12),
+                padding=ft.padding.symmetric(horizontal=14, vertical=12),
                 border_radius=BORDER_RADIUS,
                 bgcolor=ft.Colors.with_opacity(0.035, ft.Colors.WHITE),
-                border=ft.Border.all(1, ft.Colors.with_opacity(0.05, ft.Colors.WHITE)),
+                border=ft.border.all(1, ft.Colors.with_opacity(0.05, ft.Colors.WHITE)),
             )
         )
         self._page.update()
@@ -1228,7 +1153,7 @@ class ScribeOSApp:
 
 def main() -> None:
     app = ScribeOSApp()
-    ft.run(app.main)
+    ft.app(target=app.main)
 
 
 if __name__ == "__main__":

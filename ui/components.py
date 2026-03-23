@@ -89,7 +89,7 @@ def nav_item(
         ),
         bgcolor=bg,
         border_radius=BORDER_RADIUS_SM,
-        padding=ft.Padding.symmetric(horizontal=12, vertical=9),
+        padding=ft.padding.symmetric(horizontal=12, vertical=9),
         on_click=on_click,
         ink=True,
     )
@@ -110,7 +110,7 @@ def api_key_field() -> ft.TextField:
         expand=True,
         text_size=11,
         prefix_icon=ft.Icons.KEY_ROUNDED,
-        content_padding=ft.Padding.symmetric(horizontal=10, vertical=8),
+        content_padding=ft.padding.symmetric(horizontal=10, vertical=8),
     )
 
 
@@ -127,7 +127,7 @@ def glossary_field() -> ft.TextField:
         filled=True,
         expand=True,
         text_size=FONT_BODY,
-        content_padding=ft.Padding.symmetric(horizontal=14, vertical=12),
+        content_padding=ft.padding.symmetric(horizontal=14, vertical=12),
     )
 
 
@@ -145,7 +145,7 @@ def surface_card(
         bgcolor=BG_CARD,
         border=ft.border.all(1, border_color),
         border_radius=BORDER_RADIUS_LG,
-        padding=ft.Padding.all(padding),
+        padding=ft.padding.all(padding),
         expand=expand,
         height=height,
         shadow=ft.BoxShadow(
@@ -193,10 +193,10 @@ def history_card(
         bgcolor=bg,
         border=ft.border.all(1, border_col),
         border_radius=BORDER_RADIUS,
-        padding=ft.Padding.all(12),
+        padding=ft.padding.all(12),
         on_click=on_click,
         ink=True,
-        margin=ft.Margin.only(bottom=4),
+        margin=ft.margin.only(bottom=4),
     )
 
 
@@ -228,7 +228,7 @@ def studio_empty_state() -> ft.Container:
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10,
         ),
-        alignment=ft.Alignment.CENTER,
+        alignment=ft.alignment.center,
         expand=True,
     )
 
@@ -258,7 +258,7 @@ def history_empty_state() -> ft.Container:
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10,
         ),
-        alignment=ft.Alignment.CENTER,
+        alignment=ft.alignment.center,
         expand=True,
     )
 
@@ -296,7 +296,7 @@ def transcript_container(list_view):
         border_radius=BORDER_RADIUS,
         bgcolor=COLOR_TRANSCRIPT_BG,
         expand=True,
-        padding=ft.Padding.all(12),
+        padding=ft.padding.all(12),
     )
 
 def mom_container(markdown_ctrl):
@@ -305,7 +305,7 @@ def mom_container(markdown_ctrl):
         border=ft.border.all(1, BORDER_DEFAULT),
         border_radius=BORDER_RADIUS,
         bgcolor=BG_SURFACE,
-        padding=ft.Padding.all(16),
+        padding=ft.padding.all(16),
         expand=True,
     )
 

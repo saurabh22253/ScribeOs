@@ -36,68 +36,33 @@ log = get_logger(__name__)
 # _CONTEXT_WINDOW / _CONTEXT_PREFIX removed: the entire recording is now sent
 # as a single WAV so Gemini has full context without any rolling window.
 
-# ── Step 1 prompt: Blind Acoustic Agent ──────────────────────────────────────
-# Sent with audio. Strictly forbids name-to-voice guessing.
-# Names list is injected at call time as a spelling glossary only.
+# ── Transcription & Labelling prompt ──────────────────────────────────────
+# Sent with audio. Transcribes and identifies speakers based on context.
 _ACOUSTIC_PROMPT_TEMPLATE = """\
-You are an expert transcriptionist. Your ONLY job is to transcribe the audio accurately.
+You are an expert transcriptionist and transcript editor. Your job is to transcribe the audio accurately AND identify the real participants based on context.
 
 LANGUAGE RULES
-- Detect the language(s) spoken automatically. Transcribe every utterance in
-  the ORIGINAL language it was spoken in.
-- Immediately after each foreign-language segment add an English translation
-  in parentheses, e.g.: "Haan, theek hai (Yes, that's fine)".
+- Detect the language(s) spoken automatically. Transcribe every utterance in the ORIGINAL language it was spoken in.
+- Immediately after each foreign-language segment add an English translation in parentheses, e.g.: "Haan, theek hai (Yes, that's fine)".
 - If the entire conversation is in English, skip translations.
 
 SPEAKER LABELLING — CRITICAL
-- Label every distinct voice with a generic sequential label: Speaker A,
-  Speaker B, Speaker C, … in the order each voice first appears.
-- NEVER guess, infer, or assign a real person's name to any voice label.
-  You are acoustically blind to identity.
-- If only one voice is audible, omit the speaker label entirely.
+1. Identify the ACTUAL PARTICIPANTS by reading conversational context:
+   - Direct address: if a speaker says "Good work, Saurabh" to another speaker, then that other speaker IS Saurabh.
+   - Self-introduction: "Hi, I'm Priya" → that voice IS Priya.
+   - Address-reply chains: if someone calls out "Abhay, your thoughts?", the very next turn is almost certainly Abhay.
+2. If a speaker's identity cannot be logically deduced from the conversation, label them with a generic sequential label: Speaker A, Speaker B, Speaker C, … in the order each voice first appears. Do not guess names without context.
+3. Distinguish PARTICIPANTS from THIRD PARTIES. If someone is merely TALKED ABOUT (e.g. "Naveen did a great job today"), do NOT assign that name to any speaker label.
+4. If only one voice is audible, omit the speaker label entirely.
 
-SPELLING GLOSSARY (for spelling correction ONLY — do NOT use as participant names)
+SPELLING GLOSSARY (for spelling correction ONLY)
 {names_glossary}
 
 FORMATTING RULES
-- One line per speaker turn: "**Speaker X:** utterance"
+- One line per speaker turn: "**Speaker Name/Label:** utterance"
 - Omit filler words (um, uh, like, you know) unless they carry meaning.
 - Do NOT add titles, headers, commentary, or a summary — only the raw transcript.
 - Preserve technical terms, product names, and proper nouns exactly.
-"""
-
-# ── Step 2 prompt: Detective Logic Agent ─────────────────────────────────────
-# Sent with TEXT only (no audio). Infers real names from conversational context.
-_DETECTIVE_PROMPT_TEMPLATE = """\
-You are a transcript editor. Analyze the raw transcript below and apply the
-following logic to resolve speaker identities.
-
-TASKS
-1. Identify the ACTUAL PARTICIPANTS by reading conversational context:
-   - Direct address: if Speaker B says "Good work, Saurabh" to Speaker A,
-     then Speaker A IS Saurabh.
-   - Self-introduction: "Hi, I'm Priya" → that voice IS Priya.
-   - Address-reply chains: if Speaker A calls out "Abhay, your thoughts?",
-     the very next turn (Speaker B) is almost certainly Abhay.
-   - Extend chains transitively until no more names can be resolved.
-
-2. Distinguish PARTICIPANTS from THIRD PARTIES:
-   - Only map a name to a speaker label if that name is provably a voice
-     in the recording.
-   - If someone is merely TALKED ABOUT (e.g. "Naveen did a great job today"),
-     do NOT assign that name to any speaker label.
-
-3. Apply the resolved names:
-   - Replace every occurrence of the generic label (Speaker A, Speaker B, …)
-     with the inferred real name.
-   - If a speaker's identity cannot be logically deduced, leave them as
-     "Speaker [Letter]" exactly — do not guess.
-
-4. Return ONLY the updated transcript — no commentary, no explanation,
-   no header, no summary. Same formatting as the input.
-
-RAW TRANSCRIPT:
-{raw_transcript}
 """
 
 _MOM_PROMPT = """\
@@ -170,10 +135,7 @@ class AIProcessor:
             raise ValueError("Gemini API key must not be empty.")
 
         self._client = genai.Client(api_key=api_key.strip())
-        # Step 1 uses a full multimodal model (audio + text)
         self._acoustic_model = "gemini-2.5-flash"
-        # Step 2 is text-only — 1.5 Flash is fast and cheap for plain-text reasoning
-        self._detective_model = "gemini-2.5-flash"
 
         # Shared mutable state — always access under _lock
         self._lock            : threading.Lock = threading.Lock()
@@ -187,22 +149,12 @@ class AIProcessor:
         self,
         wav_bytes: bytes,
         on_result: Callable[[str], None],
-        on_step: Optional[Callable[[int], None]] = None,
     ) -> None:
         """
-        Two-step transcription pipeline for superior speaker identification.
+        Single-step transcription pipeline.
 
-        Step 1 — Blind Acoustic Agent
-            Upload the audio and ask Gemini to produce a clean transcript using
-            only generic labels (Speaker A, Speaker B, …).  Real names are
-            provided solely as a spelling glossary so it cannot hallucinate
-            identity from acoustics.
-
-        Step 2 — Detective Logic Agent
-            Feed the anonymised text (no audio) to a second Gemini call.  The
-            model reads conversational context (greetings, direct address,
-            address-reply chains) to map each generic label to the correct real
-            name — without confusing third-party mentions for participants.
+        Upload the audio and ask Gemini to produce a clean transcript,
+        automatically resolving speaker identities from conversational context.
 
         Parameters
         ----------
@@ -226,7 +178,7 @@ class AIProcessor:
             )
             _wait_for_file_active(self._client, audio_file)
 
-            # ── Step 1: Blind Acoustic Agent (audio → generic labels) ────────
+            # ── Transcription & Labelling (audio → resolved transcript) ────────
             with self._lock:
                 names = list(self.known_names)
             if names:
@@ -242,33 +194,17 @@ class AIProcessor:
                 model=self._acoustic_model,
                 contents=[acoustic_prompt, audio_file],
             )
-            raw_transcript = (acoustic_response.text or "").strip()
-            log.debug("Step 1 raw transcript:\n%s", raw_transcript)
+            final_transcript = (acoustic_response.text or "").strip()
+            log.debug("Transcript:\n%s", final_transcript)
 
-            if not raw_transcript:
+            if not final_transcript:
                 on_result("[No speech detected]")
                 return
 
-            # ── Step 2: Detective Logic Agent (text-only → resolve names) ────
-            if on_step:
-                on_step(2)
-            detective_prompt = _DETECTIVE_PROMPT_TEMPLATE.format(
-                raw_transcript=raw_transcript
-            )
-            detective_response = self._client.models.generate_content(
-                model=self._detective_model,
-                contents=[detective_prompt],
-            )
-            final_transcript = (detective_response.text or "").strip()
-            log.debug("Step 2 resolved transcript:\n%s", final_transcript)
-
-            # Fall back to raw if detective returns empty
-            text = final_transcript or raw_transcript
-
             with self._lock:
-                self._full_transcript += ("\n" if self._full_transcript else "") + text
+                self._full_transcript += ("\n" if self._full_transcript else "") + final_transcript
 
-            on_result(text)
+            on_result(final_transcript)
 
         except Exception as exc:  # noqa: BLE001
             err_msg = f"[Transcription error: {exc}]"
